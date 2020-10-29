@@ -1,24 +1,24 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
+import './components/App.css'
 import reportWebVitals from './reportWebVitals'
-
-import { BrowserRouter as Router, Switch, Route} from 'react-router-dom'
+import Register from './components/Auth/Register'
+import Login from './components/Auth/Login'
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom'
+import 'semantic-ui-css/semantic.min.css'
 
 const Root = () => (
   <Router>
     <Switch>
-    <Route path="/" component={App} />
+      <Route exact path='/' component={ App } />
+      <Route path='/login' component={ Login } />
+      <Route path='/register' component={ Register } />
     </Switch>
   </Router>
 )
 
-ReactDOM.render(
-  <React.StrictMode>
-    <Root />
-  </React.StrictMode>,
-  document.getElementById('root')
-)
+ReactDOM.render(<Root />, document.getElementById('root'))
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
