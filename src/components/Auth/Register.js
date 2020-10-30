@@ -1,14 +1,44 @@
 import React, { Component } from 'react'
 import firebase from '../firebase'
-import { Grid, Form, Segment, Header, Message, Icon } from 'semantic-ui-react'
+import { Grid, Form, Segment, Header, Message, Icon,  } from 'semantic-ui-react'
 import { Link } from 'react-router-dom'
+import md5 from 'md5'
 
 class Register extends Component {
   state = {
     username: '',
     email: '',
     password: '',
-    passwordConfirmation: ''
+    passwordConfirmation: '',
+    errors: [],
+    loading: false,
+    usersRef: firebase.database().ref('users')
+  }
+
+  isFormValid = () => {
+    let errors = []
+    let error;
+    if(this.isFormEmpty(this.state)){
+      error = { message: 'fill in all fields'}
+      this.setState( { errors: errors.concat(error)})
+      return false
+
+    }else {
+      return true;
+    }
+  }
+
+  isFormEmpty = ({username, email, password, passwordConfirmation}) => {
+    return !username.length || !email.length || !password.length ||
+    !passwordConfirmation.length;
+  }
+
+  displayErrors = (errors) => {
+    return errors.map((err, i) => {
+      return (
+        <p key={i}>{err.message}</p>
+      )
+    })
   }
 
   handleChange = (e) => {
@@ -20,20 +50,52 @@ class Register extends Component {
   handleSubmit = e => {
     e.preventDefault()
 
-    firebase
-      .auth()  
-      .createUserWithEmailAndPassword( this.state.email, this.state.password )
-      .then( createdUser => {
-        console.log( createdUser )
-      })
-      .catch(err => {
-        console.error(err)
-      })
+    if(this.isFormValid()) {
+      this.setState({ errors: [], loading: true})
+      firebase
+        .auth()  
+        .createUserWithEmailAndPassword( this.state.email, this.state.password )
+        .then( createdUser => {
+          createdUser.user.updateProfile({
+            displayName: this.state.username,
+            photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
+          })
+          console.log(createdUser)
+          return createdUser
+        })
+        .then( (createdUser) => {
+          this.saveUser(createdUser)
+            .then(()=> {
+              console.log('User should be Saved')
+              this.setState({ loading: false} )
+            })
+            .catch(err => console.log('adding to database error !!'))
+            this.setState({ loading: false} )
+        })
+        .catch(err => {
+          console.error(err)
+          this.setState({errors: this.state.errors.concat(err), loading: false})
+        })
+    }
   }
 
+  saveUser = createdUser => {
+    return this.state.usersRef.child(createdUser.user.uid).set({
+      name: createdUser.user.displayName,
+      avatar: createdUser.user.photoURL
+    })
+  }
 
   render () {
-    const { username, email, password, passwordConfirmation } = this.state
+    const { 
+      username, 
+      email, 
+      password, 
+      passwordConfirmation, 
+      errors,
+      loading
+
+    } = this.state
 
     return (
       <Grid textAlign='center' verticalAlign='middle' className="app">
@@ -88,8 +150,14 @@ class Register extends Component {
                 fluid
               />
             </Segment>
-            <button onClick={this.handleSubmit} className='ui orange button large'>Submit</button>
+            <button onClick={this.handleSubmit} disabled={loading} className={loading ? 'loading ui orange button large': ' ui orange button large'} >Submit</button>
           </Form>
+          {errors.length > 0 && (
+              <Message error>
+                <h3>Error</h3>
+                {this.displayErrors(errors)}
+              </Message>
+          )}
           <Message>Already a member? <Link to="/login">Login</Link></Message>
         </Grid.Column>
       </Grid>
