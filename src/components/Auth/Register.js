@@ -56,21 +56,17 @@ class Register extends Component {
         .auth()  
         .createUserWithEmailAndPassword( this.state.email, this.state.password )
         .then( createdUser => {
+          console.log(createdUser);
           createdUser.user.updateProfile({
-            displayName: this.state.username,
-            photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
+              displayName: this.state.username,
+              photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
           })
-          console.log(createdUser)
-          return createdUser
-        })
-        .then( (createdUser) => {
-          this.saveUser(createdUser)
-            .then(()=> {
-              console.log('User should be Saved')
-              this.setState({ loading: false} )
-            })
-            .catch(err => console.log('adding to database error !!'))
-            this.setState({ loading: false} )
+            .then(() => {
+              this.saveUser(createdUser).then(() => {
+                console.log('user saved!!!')
+                this.setState({ loading: false})
+              })
+          })
         })
         .catch(err => {
           console.error(err)
@@ -78,7 +74,11 @@ class Register extends Component {
         })
     }
   }
-
+  
+  /**
+   * @param {Object} createdUser from return firebase createuser func
+   * appends new user to firebase realtime database
+   */
   saveUser = createdUser => {
     return this.state.usersRef.child(createdUser.user.uid).set({
       name: createdUser.user.displayName,
@@ -124,6 +124,8 @@ class Register extends Component {
                 placeholder='Email'
                 onChange={ this.handleChange }
                 value={ email }
+                className={errors.some(error => error.message.toLowerCase().includes('email')) ? 'error' :
+                  '' }
                 type='email'
                 fluid
               />
@@ -136,6 +138,8 @@ class Register extends Component {
                 onChange={ this.handleChange }
                 value={ password }
                 type='password'
+                className={errors.some(error => error.message.toLowerCase().includes('password')) ? 'error' :
+                  '' }
                 fluid
               />
 
@@ -147,6 +151,8 @@ class Register extends Component {
                 onChange={ this.handleChange }
                 value={ passwordConfirmation }
                 type='password'
+                className={errors.some(error => error.message.toLowerCase().includes('password')) ? 'error' :
+                  '' }
                 fluid
               />
             </Segment>
