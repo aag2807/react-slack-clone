@@ -76,7 +76,7 @@ class Register extends Component {
   }
   
   /**
-   * @param {Object} createdUser from return firebase createuser func
+   * @param {Object} createdUser from return firebase createUser func
    * appends new user to firebase realtime database
    */
   saveUser = createdUser => {
@@ -100,7 +100,7 @@ class Register extends Component {
     return (
       <Grid textAlign='center' verticalAlign='middle' className="app">
         <Grid.Column style={{ maxWidth: 450 }}>
-          <Header as='h2' icon color='orange' textAlign='center'>
+          <Header as='h1' icon color='orange' textAlign='center'>
             <Icon name='puzzle piece' color='orange' />
             Register for RackChat
           </Header>

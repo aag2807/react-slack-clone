@@ -1,14 +1,33 @@
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Grid } from 'semantic-ui-react'
+import './App.css'
+import { connect } from 'react-redux';
+/**
+ * Component Imports
+ */
+import ColorPanel from './ColorPanel/ColorPanel'
+import SidePanel from './SidePanel/SidePanel'
+import Messages from './Messages/Messages'
+import MetaPanel from './MetaPanel/MetaPanel'
 
-function App () {
-  return (
-    <div>
-      Hello from Slack
-      <div>
-        <Link to='/register'>Register</Link>
-      </div>
-    </div>
-  )
-}
 
-export default App
+const App = ( { currentUser } ) => (
+  <Grid columns='equal' className='app' style={{background: '#eee'}}>
+    <ColorPanel />
+    <SidePanel currentUser = {currentUser}/>
+
+    <Grid.Column style={{ marginLeft: 320}}>
+      <Messages />
+    </Grid.Column>
+
+    <Grid.Column width={4}>
+      <MetaPanel />
+    </Grid.Column>
+
+  </Grid>
+)
+const mapStateToProps = state => ({
+  currentUser: state.user.currentUser
+})
+
+export default connect(mapStateToProps)(App)
