@@ -1,7 +1,6 @@
 import firebase from '../firebase'
 import React, { Component } from 'react'
 import { Grid, Header, Icon, Image } from 'semantic-ui-react'
-import './UserPanel.css'
 
 class UserPanel extends Component {
 
