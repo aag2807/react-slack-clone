@@ -8,9 +8,15 @@ html, body, .app{
 /* Messages */
 
 .messages {
-  height: 440px;
+  height: 62vh;
   overflow-y: scroll;
 }
+
+.message__progress {
+  height: 58vh;
+  overflow-y: scroll;
+}
+
 
 /* Message Form .js */
 
@@ -30,6 +36,12 @@ html, body, .app{
 }
 
 
+
 .message__image {
   padding: 1em;
+}
+
+/* Progress Bar*/
+.progress__bar {
+  margin: 0.3em 0 0 0 !important;
 }

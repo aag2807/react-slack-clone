@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import firebase from '../firebase';
 import React, { Component } from 'react';
 import { Segment, Comment} from 'semantic-ui-react';
@@ -14,7 +15,12 @@ class Messages extends Component {
     messages: [],
     messagesLoading: true,
     channel: this.props.currentChannel,
-    user: this.props.currentUser
+    user: this.props.currentUser,
+    progressBar: false,
+    numUniqueUsers: '',
+    searchTerm: '',
+    searchLoading: false,
+    searchResults: []
   }
 
   componentDidMount(){
@@ -38,8 +44,49 @@ class Messages extends Component {
         messages: loadedMessages,
         messagesLoading: false
       });
+      this.countUniqueUsers(loadedMessages)
     });
   };
+
+  handleSearchChange = event => {
+    this.setState(
+      {
+        searchTerm: event.target.value,
+        searchLoading: true
+      },
+      () => this.handleSearchMessages()
+    );
+  };
+
+
+  handleSearchMessages = () => {
+    const channelMessages = [...this.state.messages];
+    const regex = new RegExp(this.state.searchTerm, "gi");
+    const searchResults = channelMessages.reduce((acc, message) => {
+      if (
+        (message.content && message.content.match(regex)) ||
+        message.user.name.match(regex)
+      ) {
+        acc.push(message);
+      }
+      return acc;
+    }, []);
+    this.setState({ searchResults });
+    setTimeout(()=>this.setState({ searchLoading: false }),1000);
+
+  };
+
+  countUniqueUsers = messages => {
+    const uniqueUsers = messages.reduce((acc, message) => {
+      if (!acc.includes(message.user.name)){
+        acc.push(message.user.name)
+      }
+      return acc
+    },[])
+    const plural = uniqueUsers.length > 1 || uniqueUsers.length === 0
+    const numUniqueUsers = `${uniqueUsers.length} user${plural ? 's': ""}`
+    this.setState({numUniqueUsers})
+  }
 
   displayMessages = (messages) => (
     messages.length > 0 && messages.map(message => (
@@ -51,16 +98,44 @@ class Messages extends Component {
     ))
   )
 
+  isProgressBarVisible = percent => {
+    if (percent > 0) {
+      this.setState({
+        progressBar: true
+      })
+    }
+  }
+
+  displayChannelName = channel => channel ? `${channel.name}` : '';
+
+
   render() {
-    const { messagesRef, messages, user, channel } = this.state
+    const {
+      numUniqueUsers,
+      searchLoading,
+      messagesRef,
+      messages,
+      user,
+      channel,
+      progressBar,
+      searchTerm,
+      searchResults
+     } = this.state
 
     return (
       <React.Fragment>
-        <MessagesHeader />
+        <MessagesHeader
+          handleSearchChange={this.handleSearchChange}
+          channelName={this.displayChannelName(channel)}
+          numUniqueUsers={numUniqueUsers}
+          searchLoading={searchLoading}
+        />
 
         <Segment>
-          <Comment.Group className='messages'>
-            {this.displayMessages(messages)}
+          <Comment.Group className={ progressBar ? 'message__progress': 'messages'}>
+          {searchTerm
+            ? this.displayMessages(searchResults)
+            : this.displayMessages(messages)}
           </Comment.Group>
         </Segment>
 
@@ -68,6 +143,7 @@ class Messages extends Component {
           messagesRef={ messagesRef }
           currentChannel={channel}
           currentUser={user}
+          isProgressBarVisible={this.isProgressBarVisible}
         />
       </React.Fragment>
     )

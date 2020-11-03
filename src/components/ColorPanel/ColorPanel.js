@@ -14,7 +14,7 @@ class ColorPanel extends Component {
         width="very thin"
       >
       <Divider />
-        <Button icon='add' size='small' color='blue' />
+      <Button icon='add' size='small' />
       </Sidebar>
     )
   }
