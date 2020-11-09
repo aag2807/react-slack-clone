@@ -22,7 +22,9 @@ class Messages extends Component {
     numUniqueUsers: '',
     searchTerm: '',
     searchLoading: false,
-    searchResults: []
+    searchResults: [],
+    isChannelStarred: false,
+    usersRef: firebase.database().ref('users'),
   };
 
   componentDidMount(){
@@ -30,12 +32,29 @@ class Messages extends Component {
 
     if(channel && user){
       this.addListeners(channel.id);
+      this.addUserStarsListener(channel.id, user.uid)
     }
   };
 
   addListeners = (channelId) => {
     this.addMessageListener(channelId);
   };
+
+  addUserStarsListener = (channelId, userId) =>{
+    this.state.usersRef
+      .child(userId)
+      .child('starred')
+      .once('value')
+      .then( data => {
+        if(data.val() !== null) {
+          const channelIds = Object.keys(data.val());
+          const prevStarred = channelIds.includes(channelId)
+          this.setState({
+            isChannelStarred : prevStarred
+          })
+        }
+      });
+  }
 
   getMessagesRef = () => {
     const { messagesRef, privateMessagesRef, isPrivateChannel} = this.state
@@ -117,10 +136,40 @@ class Messages extends Component {
     return channel ? `${this.state.isPrivateChannel ? '@': '#'}${channel.name}` : '';
   }
 
+  handleStar = () => {
+    this.setState(prevState => ({
+      isChannelStarred: !prevState.isChannelStarred
+    }), () => this.starChannel());
+  };
+
+  starChannel = () => {
+    if (this.state.isChannelStarred) {
+      this.state.usersRef.child(`${this.state.user.uid}/starred`).update({
+        [this.state.channel.id]: {
+          name: this.state.channel.name,
+          details: this.state.channel.details,
+          createdBy: {
+            name: this.state.channel.createdBy.name,
+            avatar: this.state.channel.createdBy.avatar
+          }
+        }
+      });
+    } else {
+      this.state.usersRef
+        .child(`${this.state.user.uid}/starred`)
+        .child(this.state.channel.id)
+        .remove(err => {
+          if (err !== null) {
+            console.error(err);
+          }
+        });
+    }
+  };
 
   render() {
     const {
       numUniqueUsers,
+      isChannelStarred,
       searchLoading,
       messagesRef,
       messages,
@@ -140,6 +189,8 @@ class Messages extends Component {
           numUniqueUsers={numUniqueUsers}
           searchLoading={searchLoading}
           isPrivateChannel={isPrivateChannel}
+          handleStar={this.handleStar}
+          isChannelStarred={isChannelStarred}
         />
 
         <Segment>
@@ -164,3 +215,21 @@ class Messages extends Component {
 }
 
 export default Messages;
+
+
+/*
+  || MessageHeader transition ||
+
+  <Transition
+  visible={visible} 
+  animation={'pulse'}
+  duration={duration}
+  >
+
+  <Icon 
+  onClick={handleStar && this.toggleVisibility}
+  name={isChannelStarred ? 'star': 'star outline'}
+  color={isChannelStarred ? 'yellow' : 'black'}
+  />
+  </Transition>
+*/ 
