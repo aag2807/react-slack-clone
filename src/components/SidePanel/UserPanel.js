@@ -1,12 +1,33 @@
 import firebase from '../firebase'
 import React, { Component } from 'react'
-import { Grid, Header, Icon, Image } from 'semantic-ui-react'
+import { Grid, Header, Icon, Image, Dropdown } from 'semantic-ui-react'
 
 class UserPanel extends Component {
 
   state = {
     user: this.props.currentUser
   }
+
+  dropdownOptions = () => [
+    {
+      key: "user",
+      text: (
+        <span>
+          Signed in as <strong>{this.state.user.displayName}</strong>
+        </span>
+      ),
+      disabled: true
+    },
+    {
+      key: "avatar",
+      text: <span>Change Avatar</span>
+    },
+    {
+      key: "signout",
+      text: <span onClick={this.handleSignout}>Sign Out</span>
+    }
+  ];
+
 
 
   handleSignOut = () =>{
@@ -30,19 +51,17 @@ class UserPanel extends Component {
           </Grid.Row>
 
         {/* User Dropdown */}
-          <Header style={{ padding: '0.25em'}} as='h4' inverted>
-            <div className='ui dropdown'>
-              <div className='text' style={ {paddingLeft: '20px',paddingBottom: '15px'}}>
-                 <Image src={user.photoURL} space='right' avatar/>
-                {user.displayName}
-              </div>
-                <div className='item hovered'>
-                <span style={{cursor:'pointer'}}>Sign in as{" "} <strong>{user.displayName}</strong></span></div>
-                <div className='item hovered'><span style={{cursor:'pointer'}}>Change Avatar</span></div>
-                <div className='item hovered'><span style={{cursor:'pointer'}} onClick={this.handleSignOut}>Sign out</span></div>
-            </div>
-          </Header>
-
+          <Header style={{ padding: "0.25em" }} as="h4" inverted>
+              <Dropdown
+                trigger={
+                  <span>
+                    <Image src={user.photoURL} spaced="right" avatar />
+                    {user.displayName}
+                  </span>
+                }
+                options={this.dropdownOptions()}
+              />
+            </Header>
         </Grid.Column>
       </Grid>
     )

@@ -4,6 +4,10 @@ html, body, .app{
   padding: 1em;
 }
 
+/* sidepanel */
+.menu {
+  padding-bottom: 2em;
+}
 
 /* Messages */
 

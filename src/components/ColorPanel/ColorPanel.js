@@ -18,6 +18,6 @@ class ColorPanel extends Component {
       </Sidebar>
     )
   }
-}
+} 
 
 export default ColorPanel;
