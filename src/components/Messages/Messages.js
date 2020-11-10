@@ -1,9 +1,11 @@
 /* eslint-disable no-undef */
 import firebase from '../firebase';
 import React, { Component } from 'react';
+import { connect } from 'react-redux'; 
 import { Segment, Comment} from 'semantic-ui-react';
 
 //Component Imports
+import { setUserPosts } from '../../actions'
 import MessagesHeader from './MessagesHeader';
 import MessageForm from './MessageForm';
 import Message from './Message';
@@ -65,17 +67,18 @@ class Messages extends Component {
   addMessageListener = channelId => {
     let loadedMessages = [];
     const ref = this.getMessagesRef();
-    ref.child(channelId).on('child_added', (snap) => {
+    ref.child(channelId).on("child_added", snap => {
       loadedMessages.push(snap.val());
       this.setState({
         messages: loadedMessages,
         messagesLoading: false
       });
-      this.countUniqueUsers(loadedMessages)
+      this.countUniqueUsers(loadedMessages);
+      this.countUserPosts(loadedMessages);
     });
-  };
+  };;
 
-  handleSearchChange = event => {
+  handleSearchChange = (event) => {
     this.setState(
       {
         searchTerm: event.target.value,
@@ -102,7 +105,7 @@ class Messages extends Component {
     setTimeout(()=>this.setState({ searchLoading: false }),1000);
   };
 
-  countUniqueUsers = messages => {
+  countUniqueUsers = (messages) => {
     const uniqueUsers = messages.reduce((acc, message) => {
       if (!acc.includes(message.user.name)){
         acc.push(message.user.name)
@@ -114,6 +117,22 @@ class Messages extends Component {
     this.setState({numUniqueUsers})
   }
 
+  countUserPosts = (messages) => {
+    let userPosts = messages.reduce((acc, message) => {
+      if( message.user.name in acc) {
+        acc[message.user.name].count += 1
+      } else {
+        acc[message.user.name] = {
+          avatar: message.user.avatar,
+          count: 1
+        }
+      }
+      return acc;
+    },{})
+    this.props.setUserPosts(userPosts);
+  }
+
+
   displayMessages = (messages) => (
     messages.length > 0 && messages.map(message => (
       <Message 
@@ -124,7 +143,7 @@ class Messages extends Component {
     ))
   )
 
-  isProgressBarVisible = percent => {
+  isProgressBarVisible = (percent) => {
     if (percent > 0) {
       this.setState({
         progressBar: true
@@ -132,7 +151,7 @@ class Messages extends Component {
     }
   }
 
-  displayChannelName = channel => {
+  displayChannelName = (channel) => {
     return channel ? `${this.state.isPrivateChannel ? '@': '#'}${channel.name}` : '';
   }
 
@@ -214,7 +233,7 @@ class Messages extends Component {
   }
 }
 
-export default Messages;
+export default connect(null, { setUserPosts})(Messages);
 
 
 /*
