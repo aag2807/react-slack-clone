@@ -107,7 +107,7 @@ class UserPanel extends Component {
       .child(this.state.user.uid)
       .update({ avatar: this.state.uploadCroppedImage})
       .then( () => {
-        console.log('succesfully uploaded image')
+        console.log('successfully uploaded image')
       })
       .catch(err => console.error(err))
   }

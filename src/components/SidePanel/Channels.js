@@ -9,6 +9,7 @@ import './UserPanel.css'
 class Channels extends Component {
 
   state = {
+    typingRef: firebase.database().ref('typing'),
     user: this.props.currentUser,
     channel: null,
     channels: [],
@@ -35,7 +36,12 @@ class Channels extends Component {
   }
 
   changeChannel = (channel) => {
+    const { user } = this.state
     this.setActiveChannel(channel);
+    this.state.typingRef
+      .child(this.state.channel.id)
+      .child(user.uid)
+      .remove()
     this.clearNotifications();
     this.props.setCurrentChannel(channel);
     this.props.setPrivateChannel(false);
