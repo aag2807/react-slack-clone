@@ -4,12 +4,15 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux'; 
 import { Segment, Comment} from 'semantic-ui-react';
 
+
 //Component Imports
 import { setUserPosts } from '../../actions'
 import MessagesHeader from './MessagesHeader';
 import MessageForm from './MessageForm';
 import Message from './Message';
 import Typing from './Typing';
+import Skeleton from '../Auth/Skeleton'
+
 class Messages extends Component {
 
   state = {
@@ -29,16 +32,54 @@ class Messages extends Component {
     usersRef: firebase.database().ref('users'),
     typingRef: firebase.database().ref('typing'),
     connectedRef: firebase.database().ref('.info/connected'),
-    typingUsers: []
+    typingUsers: [],
+    listeners:[],
+
   };
 
   componentDidMount(){
-    const {channel, user } = this.state;
+    const {channel, user, listeners } = this.state;
 
     if(channel && user){
+      this.removeListeners(listeners);
       this.addListeners(channel.id);
-      this.addUserStarsListener(channel.id, user.uid)
+      this.addUserStarsListener(channel.id, user.uid);
     }
+  };
+
+  componentDidUpdate(prevProps, prevState){
+    if( this.messagesEnd) {
+      this.scrollToBottom();
+    }
+  };
+
+  addToListeners = (id, ref, event) => {
+    const index = this.state.listeners.findIndex(listener => {
+      return listener.id === id && listener.ref === ref &&
+      listener.event === event;
+    });
+
+    if( index === -1) {
+      const newListener = {id, ref, event};
+      this.setState({
+        listeners : this.state.listeners.concat(newListener)
+      });
+    }
+  };
+
+  componentWillUnmount() {
+    this.removeListeners(this.state.listeners);
+    this.state.connectedRef.off();
+  }
+
+  removeListeners = (listeners) => {
+    listeners.forEach(listener => {
+      listener.ref.child(listener.id).off(listener.event)
+    })
+  }
+  
+  scrollToBottom = () => {
+    this.messagesEnd.scrollIntoView({ behavior: "smooth" });
   };
 
   addListeners = (channelId) => {
@@ -60,6 +101,7 @@ class Messages extends Component {
           this.setState({ typingUsers })
         }
       })
+    this.addToListeners(channelId, this.state.typingRef, 'child_added');
 
     this.state.typingRef
       .child(channelId)
@@ -70,6 +112,7 @@ class Messages extends Component {
           this.setState({ typingUsers })
         }
       })
+      this.addToListeners(channelId, this.state.typingRef, 'child_removed');
 
       this.state.connectedRef
         .on('value', snap => {
@@ -85,7 +128,7 @@ class Messages extends Component {
               })
           }
         })
-  }
+  };
 
   addUserStarsListener = (channelId, userId) =>{
     this.state.usersRef
@@ -101,7 +144,7 @@ class Messages extends Component {
           })
         }
       });
-  }
+  };
 
   getMessagesRef = () => {
     const { messagesRef, privateMessagesRef, isPrivateChannel} = this.state
@@ -121,7 +164,9 @@ class Messages extends Component {
       this.countUniqueUsers(loadedMessages);
       this.countUserPosts(loadedMessages);
     });
-  };;
+      this.addToListeners(channelId, this.state.typingRef, 'child_added');
+    
+  }; 
 
   handleSearchChange = (event) => {
     this.setState(
@@ -159,7 +204,7 @@ class Messages extends Component {
     const plural = uniqueUsers.length > 1 || uniqueUsers.length === 0
     const numUniqueUsers = `${uniqueUsers.length} user${plural ? 's': ""}`
     this.setState({numUniqueUsers})
-  }
+  };                  
 
   countUserPosts = (messages) => {
     let userPosts = messages.reduce((acc, message) => {
@@ -174,7 +219,7 @@ class Messages extends Component {
       return acc;
     },{})
     this.props.setUserPosts(userPosts);
-  }
+  };
 
 
   displayMessages = (messages) => (
@@ -185,7 +230,7 @@ class Messages extends Component {
         user={this.state.user}
       />
     ))
-  )
+  );
 
   isProgressBarVisible = (percent) => {
     if (percent > 0) {
@@ -193,11 +238,11 @@ class Messages extends Component {
         progressBar: true
       })
     }
-  }
+  };
 
   displayChannelName = (channel) => {
     return channel ? `${this.state.isPrivateChannel ? '@': '#'}${channel.name}` : '';
-  }
+  };
 
   handleStar = () => {
     this.setState(prevState => ({
@@ -229,8 +274,17 @@ class Messages extends Component {
     }
   };
 
-  displayTypingUsers = users =>
-    users.length > 0 && users.map(user => (
+  displayMessagesSkeleton = (loading) => (
+    loading ? (
+      <React.Fragment>
+        {[...Array(10)].map( (_, i) => (
+          <Skeleton key={i}/>
+        ))}
+      </React.Fragment>
+    ) : null
+  );
+
+  displayTypingUsers = users => users.length > 0 && users.map(user => (
       <div
         style={{ display: "flex", alignItems: "center", marginBottom: "0.2em" }}
         key={user.id}
@@ -238,6 +292,7 @@ class Messages extends Component {
         <span className="user__typing">{user.name} is typing</span> <Typing />
       </div>
     ));
+
 
   render() {
     const {
@@ -252,7 +307,8 @@ class Messages extends Component {
       searchTerm,
       searchResults,
       isPrivateChannel,
-      typingUsers
+      typingUsers,
+      messagesLoading
      } = this.state
 
     return (
@@ -269,10 +325,12 @@ class Messages extends Component {
 
         <Segment>
           <Comment.Group className={ progressBar ? 'message__progress': 'messages'}>
+          {this.displayMessagesSkeleton(messagesLoading)}
           {searchTerm
             ? this.displayMessages(searchResults)
             : this.displayMessages(messages)}
             {this.displayTypingUsers(typingUsers)}
+            <div ref={node => (this.messagesEnd = node)}></div>
           </Comment.Group>
         </Segment>
 
@@ -292,19 +350,3 @@ class Messages extends Component {
 export default connect(null, { setUserPosts})(Messages);
 
 
-/*
-  || MessageHeader transition ||
-
-  <Transition
-  visible={visible} 
-  animation={'pulse'}
-  duration={duration}
-  >
-
-  <Icon 
-  onClick={handleStar && this.toggleVisibility}
-  name={isChannelStarred ? 'star': 'star outline'}
-  color={isChannelStarred ? 'yellow' : 'black'}
-  />
-  </Transition>
-*/ 
