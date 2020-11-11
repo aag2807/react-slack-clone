@@ -17,4 +17,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
-<a href="">Hosted here</a>
+<a href="https://rack-chat.web.app">Hosted here https://rack-chat.web.app</a>
