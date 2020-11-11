@@ -8,7 +8,7 @@ Intended only for big screens, I'll make it responsive as time goes by.
 
 ```React.js
 Make sure to
-create your own firebase config and save it in the components foler.
+create your own firebase config and save it in the components folder.
 Then just 'npm start' and take a look in port :3000
 ```
 
