@@ -1,6 +1,5 @@
 # Rack-Chat
 
-
 Rack-chat is a slack clone elaborated with react, semantic-ui 
 & firebase.
 Intended only for big screens, I'll make it responsive as time goes by.
@@ -9,9 +8,8 @@ Intended only for big screens, I'll make it responsive as time goes by.
 
 ```React.js
 Make sure to
-foobar.pluralize('word') # returns 'words'
-foobar.pluralize('goose') # returns 'geese'
-foobar.singularize('phenomena') # returns 'phenomenon'
+create your own firebase config and save it in the components foler.
+Then just 'npm start' and take a look in port :3000
 ```
 
 ## Contributing
@@ -19,5 +17,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 
 Please make sure to update tests as appropriate.
 
-## License
-[MIT](https://choosealicense.com/licenses/mit/)
+<a href="">Hosted here</a>
